@@ -1,0 +1,15 @@
+
+
+
+.login-button{
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: background 0.3s;
+}
+
+.login-container{
+    background: linear-gradient(135deg, #667eea, #764ba2)
+}
