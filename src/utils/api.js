@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: "https://cement-operations-backend-594125598497.asia-south1.run.app/",
 });
 
 // Attach JWT token automatically

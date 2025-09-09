@@ -27,7 +27,7 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
-  const wsData = useWebSocket("ws://localhost:8000/ws/data");
+  const wsData = useWebSocket("wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/data");
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
@@ -45,6 +45,13 @@ export default function Dashboard() {
       setRecords((prev) => [...prev.slice(-100), normalized]); // keep last 100
     }
   }, [wsData]);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/ml/predictions?limit=50")
+      .then(res => res.json())
+      .then(data => setPredictions(data.predictions));
+  }, []);
+  
 
   const latest = records[records.length - 1] || {};
 
