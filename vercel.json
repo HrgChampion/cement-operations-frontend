@@ -1,10 +1,9 @@
 {
-    "version": 2,
-    "builds": [
-      { "src": "package.json", "use": "@vercel/node" }
-    ],
-    "routes": [
-      { "src": "/(.*)", "dest": "/" }
-    ]
-  }
-  
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://cement-operations-backend-594125598497.asia-south1.run.app/$1"
+    }
+  ]
+}
