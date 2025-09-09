@@ -1,12 +1,12 @@
 import API from "../utils/api";
 
 export const signup = async (userData) => {
-  const { data } = await API.post("api/auth/signup", userData);
+  const { data } = await API.post("/auth/signup", userData);
   return data;
 };
 
 export const login = async (userData) => {
-  const { data } = await API.post("api/auth/login", userData);
+  const { data } = await API.post("/auth/login", userData);
   if (data.access_token) {
     localStorage.setItem("token", data.access_token);
   }
