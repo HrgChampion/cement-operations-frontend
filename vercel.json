@@ -4,6 +4,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://cement-operations-backend-594125598497.asia-south1.run.app/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
