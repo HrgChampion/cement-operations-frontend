@@ -46,11 +46,11 @@ export default function Dashboard() {
     }
   }, [wsData]);
 
-  useEffect(() => {
-    fetch("http://localhost:8000/ml/predictions?limit=50")
-      .then(res => res.json())
-      .then(data => setPredictions(data.predictions));
-  }, []);
+  // useEffect(() => {
+  //   fetch("http://localhost:8000/ml/predictions?limit=50")
+  //     .then(res => res.json())
+  //     .then(data => setPredictions(data.predictions));
+  // }, []);
   
 
   const latest = records[records.length - 1] || {};
