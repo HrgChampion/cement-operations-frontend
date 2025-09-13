@@ -1,117 +1,108 @@
-import React, { useState, useEffect } from "react";
-import useWebSocket from "../../hooks/useWebSocket";
+import React, { useEffect, useMemo, useState } from "react";
+import useWebSocket from "../hooks/useWebSocket";
+import { fetchPredictions } from "../api";
 import {
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Chip,
-  Divider,
-  LinearProgress,
+  Grid, Card, CardContent, Typography, Box, Table, TableHead, TableRow,
+  TableCell, TableBody, Chip, Divider, LinearProgress, IconButton
 } from "@mui/material";
 import { motion } from "framer-motion";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
 } from "recharts";
+import { fmt, fmtShort } from "../utils/format";
+import RefreshIcon from "@mui/icons-material/Refresh";
+
+const WS_URL =  "wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/data";
 
 export default function Dashboard() {
-  const wsData = useWebSocket("wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/data");
+  const wsData = useWebSocket(WS_URL);
   const [records, setRecords] = useState([]);
+  const [predictions, setPredictions] = useState([]);
+  const [loadingPred, setLoadingPred] = useState(false);
 
+  // normalize and push incoming WS record
   useEffect(() => {
-    if (wsData) {
-      const normalized = {
-        ...wsData,
-        temperature: wsData.metrics?.temperature,
-        emissions: wsData.metrics?.emissions,
-        power: wsData.metrics?.power,
-        vibration: wsData.metrics?.vibration,
-        pressure: wsData.metrics?.pressure,
-        fineness: wsData.metrics?.fineness,
-        residue: wsData.metrics?.residue,
-      };
-      setRecords((prev) => [...prev.slice(-100), normalized]); // keep last 100
-    }
+    if (!wsData) return;
+    const normalized = {
+      ...wsData,
+      // support both .metrics.* and top-level keys
+      temperature: wsData.metrics?.temperature ?? wsData.temperature ?? null,
+      emissions: wsData.metrics?.emissions ?? wsData.emissions ?? wsData.emission ?? null,
+      power: wsData.metrics?.power ?? wsData.power ?? null,
+      vibration: wsData.metrics?.vibration ?? wsData.vibration ?? null,
+      pressure: wsData.metrics?.pressure ?? wsData.pressure ?? null,
+      fineness: wsData.metrics?.fineness ?? wsData.fineness ?? null,
+      residue: wsData.metrics?.residue ?? wsData.residue ?? null,
+      timestamp: wsData.timestamp ?? new Date().toISOString(),
+    };
+    setRecords(prev => {
+      const next = [...prev.slice(-199), normalized]; // keep 200
+      return next;
+    });
   }, [wsData]);
 
-  // useEffect(() => {
-  //   fetch("http://localhost:8000/ml/predictions?limit=50")
-  //     .then(res => res.json())
-  //     .then(data => setPredictions(data.predictions));
-  // }, []);
-  
+  // Load predictions periodically
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        setLoadingPred(true);
+        const res = await fetchPredictions(25);
+        if (!mounted) return;
+        setPredictions(res);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingPred(false);
+      }
+    }
+    load();
+    const t = setInterval(load, 30_000); // refresh every 30s
+    return () => { mounted = false; clearInterval(t); };
+  }, []);
 
-  const latest = records[records.length - 1] || {};
+  const latest = records.length ? records[records.length - 1] : {};
 
-  // helper to fix decimals
-  const formatValue = (val, unit = "") =>
-    val !== undefined && val !== null && !isNaN(val)
-      ? `${Number(val).toFixed(2)} ${unit}`
-      : "--";
+  // prepare chart data (convert timestamp to readable label)
+  const chartData = useMemo(() => {
+    return records.map(r => ({
+      timestamp: (new Date(r.timestamp)).toLocaleTimeString(),
+      temperature: r.temperature ? Number(r.temperature.toFixed(2)) : null,
+      emissions: r.emissions ? Number(r.emissions.toFixed(2)) : null,
+      power: r.power ? Number(r.power.toFixed(2)) : null,
+      vibration: r.vibration ? Number(r.vibration.toFixed(2)) : null,
+    }));
+  }, [records]);
+
+  // KPI items
+  const kpis = [
+    { label: "🔥 Temp (C)", value: latest.temperature },
+    { label: "🌍 Emissions (mg/Nm³)", value: latest.emissions },
+    { label: "⚡ Power (kW)", value: latest.power },
+    { label: "📉 Pressure (bar)", value: latest.pressure },
+    { label: "📈 Vibration (mm/s)", value: latest.vibration },
+    { label: "🎯 Fineness (m²/kg)", value: latest.fineness },
+    { label: "🧪 Residue (%)", value: latest.residue },
+    { label: "⚠️ Anomaly", value: latest.anomaly ? "Yes" : "No" },
+  ];
 
   return (
-    <Box
-      sx={{
-        p: 4,
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #667eea, #764ba2)",
-      }}
-    >
-      <Typography
-        variant="h3"
-        sx={{ mb: 4, color: "white", fontWeight: "bold", textAlign: "center" }}
-      >
+    <Box sx={{ p: 4, minHeight: "100vh", background: "linear-gradient(135deg,#667eea,#764ba2)" }}>
+      <Typography variant="h3" sx={{ mb: 3, color: "white", fontWeight: "700", textAlign: "center" }}>
         🏭 Cement Plant Operations Dashboard
       </Typography>
 
-      {/* KPI Tiles */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {[
-          { label: "🔥 Temp", value: formatValue(latest.temperature, "°C") },
-          {
-            label: "🌍 Emissions",
-            value: formatValue(latest.emissions, "mg/Nm³"),
-          },
-          { label: "⚡ Power", value: formatValue(latest.power, "kW") },
-          { label: "📉 Pressure", value: formatValue(latest.pressure, "bar") },
-          {
-            label: "📈 Vibration",
-            value: formatValue(latest.vibration, "mm/s"),
-          },
-          {
-            label: "🎯 Fineness",
-            value: formatValue(latest.fineness, "m²/kg"),
-          },
-          { label: "🧪 Residue", value: formatValue(latest.residue, "%") },
-          { label: "⚠️ Anomaly", value: latest.anomaly ? "Yes" : "No" },
-        ].map((kpi, i) => (
-          <Grid item xs={12} sm={6} md={3} key={i}>
-            <motion.div whileHover={{ scale: 1.05 }}>
-              <Card
-                sx={{
-                  borderRadius: 4,
-                  backdropFilter: "blur(12px)",
-                  background: "rgba(255,255,255,0.1)",
-                  color: "white",
-                  textAlign: "center",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-                }}
-              >
+      {/* KPI Row */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {kpis.map((kpi, i) => (
+          <Grid key={kpi.label} item xs={12} sm={6} md={3}>
+            <motion.div whileHover={{ scale: 1.03 }}>
+              <Card sx={{ borderRadius: 3, background: "rgba(255,255,255,0.08)", color: "white" }}>
                 <CardContent>
-                  <Typography variant="h6">{kpi.label}</Typography>
-                  <Typography variant="h4">{kpi.value}</Typography>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>{kpi.label}</Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                    {typeof kpi.value === "number" ? fmt(kpi.value, 2) : kpi.value ?? "--"}
+                  </Typography>
                 </CardContent>
               </Card>
             </motion.div>
@@ -119,106 +110,99 @@ export default function Dashboard() {
         ))}
       </Grid>
 
-      {/* Charts */}
-      <Grid container spacing={4}>
-        {/* Temperature */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 4, backdropFilter: "blur(8px)" }}>
+      {/* Charts + Prediction Panel */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={8}>
+          <Card sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🔥 Temperature Trends
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={records}>
+              <Typography variant="h6" gutterBottom>🔥 Temp & 🌍 Emissions Trends</Typography>
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="timestamp" hide />
+                  <XAxis dataKey="timestamp" tick={{ fontSize: 11 }} />
                   <YAxis />
-                  <Tooltip formatter={(val) => formatValue(val, "°C")} />
-                  <Line
-                    type="monotone"
-                    dataKey="temperature"
-                    stroke="#ef4444"
-                    strokeWidth={2}
-                    dot={false}
-                  />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="temperature" stroke="#ef4444" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="emissions" stroke="#3b82f6" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Emissions */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 4, backdropFilter: "blur(8px)" }}>
+        <Grid item xs={12} md={4}>
+          <Card sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🌍 Emissions Trends
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={records}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                <Typography variant="h6">🔮 Recent Predictions</Typography>
+                <IconButton onClick={async () => {
+                  setLoadingPred(true);
+                  const data = await fetchPredictions(20).catch(console.error);
+                  if (data) setPredictions(data);
+                  setLoadingPred(false);
+                }}>
+                  <RefreshIcon sx={{ color: "inherit" }} />
+                </IconButton>
+              </Box>
+              <Divider sx={{ mb: 1 }} />
+              <Box sx={{ maxHeight: 260, overflowY: "auto" }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Time</TableCell>
+                      <TableCell>Equip</TableCell>
+                      <TableCell>Prob</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {predictions.length === 0 && (
+                      <TableRow><TableCell colSpan={3}>No predictions</TableCell></TableRow>
+                    )}
+                    {predictions.map((p, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>{ new Date(p.prediction_time).toLocaleString() }</TableCell>
+                        <TableCell>{ p.equipment }</TableCell>
+                        <TableCell>
+                          <Chip label={ (Number(p.anomaly_prob || p.prob || 0)).toFixed(2) } color={ (Number(p.anomaly_prob || 0) > 0.8) ? "error" : "default" } />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* More charts: Power & Vibration */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent>
+              <Typography variant="h6">⚡ Power</Typography>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="timestamp" hide />
                   <YAxis />
-                  <Tooltip formatter={(val) => formatValue(val, "mg/Nm³")} />
-                  <Line
-                    type="monotone"
-                    dataKey="emissions"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={false}
-                  />
+                  <Tooltip />
+                  <Line dataKey="power" stroke="#f59e0b" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Power */}
         <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 4, backdropFilter: "blur(8px)" }}>
+          <Card sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                ⚡ Power Consumption
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={records}>
+              <Typography variant="h6">📈 Vibration</Typography>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="timestamp" hide />
                   <YAxis />
-                  <Tooltip formatter={(val) => formatValue(val, "kW")} />
-                  <Line
-                    type="monotone"
-                    dataKey="power"
-                    stroke="#facc15"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Vibration */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 4, backdropFilter: "blur(8px)" }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                📈 Vibration Monitoring
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={records}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="timestamp" hide />
-                  <YAxis />
-                  <Tooltip formatter={(val) => formatValue(val, "mm/s")} />
-                  <Line
-                    type="monotone"
-                    dataKey="vibration"
-                    stroke="#22c55e"
-                    strokeWidth={2}
-                    dot={false}
-                  />
+                  <Tooltip />
+                  <Line dataKey="vibration" stroke="#10b981" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -226,73 +210,37 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-      {/* Anomalies Table */}
-      <Grid item xs={12} sx={{ mt: 4 }}>
-        <Card sx={{ borderRadius: 4, backdropFilter: "blur(10px)" }}>
+      {/* Recent Anomalies (clickable) */}
+      <Box sx={{ mt: 3 }}>
+        <Card sx={{ borderRadius: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              ⚠️ Recent Anomalies
-            </Typography>
+            <Typography variant="h6">⚠️ Recent Anomalies (stream)</Typography>
             <Divider sx={{ mb: 2 }} />
-            <Table>
+            <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Timestamp</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Equipment</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Anomaly Type</TableCell>
+                  <TableCell>Timestamp</TableCell>
+                  <TableCell>Equipment</TableCell>
+                  <TableCell>Anomaly</TableCell>
+                  <TableCell>Temp</TableCell>
+                  <TableCell>Emissions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {records
-                  .filter((r) => r.anomaly)
-                  .slice(-10)
-                  .map((row, i) => (
-                    <TableRow
-                      key={i}
-                      sx={{ backgroundColor: "rgba(255,0,0,0.1)" }}
-                    >
-                      <TableCell>{row.timestamp}</TableCell>
-                      <TableCell>{row.equipment}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={row.anomaly_type}
-                          color="error"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                {records.filter(r => r.anomaly).slice(-10).reverse().map((row, i) => (
+                  <TableRow key={i} sx={{ backgroundColor: "rgba(255,0,0,0.06)" }}>
+                    <TableCell>{ new Date(row.timestamp).toLocaleString() }</TableCell>
+                    <TableCell>{ row.equipment }</TableCell>
+                    <TableCell><Chip label={row.anomaly_type || "anomaly"} color="error" size="small" /></TableCell>
+                    <TableCell>{ row.temperature !== undefined ? fmt(row.temperature, 2) : "--" }</TableCell>
+                    <TableCell>{ row.emissions !== undefined ? fmt(row.emissions, 2) : "--" }</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-      </Grid>
-
-      {/* Live Plant Status */}
-      <Grid item xs={12} sx={{ mt: 4 }}>
-        <Card sx={{ borderRadius: 4, backdropFilter: "blur(10px)" }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              🚦 Live Plant Status
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              Active Equipment: {latest.equipment || "Unknown"}
-            </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={latest.anomaly ? 90 : 30}
-              sx={{
-                height: 12,
-                borderRadius: 5,
-                backgroundColor: "rgba(255,255,255,0.2)",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor: latest.anomaly ? "#dc2626" : "#16a34a",
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
-      </Grid>
+      </Box>
     </Box>
   );
 }

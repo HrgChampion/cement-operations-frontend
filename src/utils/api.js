@@ -13,4 +13,19 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
+export async function fetchPredictions(limit = 50) {
+  const res = await API.get(`/ml/predictions`, {
+    params: { limit },
+  });
+  // some backends wrap predictions inside { predictions: [...] }
+  return res.data.predictions || res.data;
+}
+
+export async function fetchLatestHistory(limit = 100) {
+  const res = await API.get(`/data/batch`, {
+    params: { size: limit },
+  });
+  return res.data;
+}
+
 export default API;
