@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import useWebSocket from "../hooks/useWebSocket";
-import { fetchPredictions } from "../api";
+import useWebSocket from "../../hooks/useWebSocket";
+import { fetchPredictions } from "../../utils/api";
 import {
   Grid, Card, CardContent, Typography, Box, Table, TableHead, TableRow,
   TableCell, TableBody, Chip, Divider, LinearProgress, IconButton
@@ -9,8 +9,8 @@ import { motion } from "framer-motion";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
 } from "recharts";
-import { fmt, fmtShort } from "../utils/format";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import { fmt, fmtShort } from "../../utils/format";
+import { RefreshCw } from 'lucide-react';
 
 const WS_URL =  "wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/data";
 
@@ -141,7 +141,7 @@ export default function Dashboard() {
                   if (data) setPredictions(data);
                   setLoadingPred(false);
                 }}>
-                  <RefreshIcon sx={{ color: "inherit" }} />
+                  <RefreshCw sx={{ color: "inherit" }} />
                 </IconButton>
               </Box>
               <Divider sx={{ mb: 1 }} />
