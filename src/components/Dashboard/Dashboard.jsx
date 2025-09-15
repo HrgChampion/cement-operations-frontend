@@ -20,6 +20,16 @@ export default function Dashboard() {
   const [predictions, setPredictions] = useState([]);
   const [loadingPred, setLoadingPred] = useState(false);
 
+  const alert = useAlertsSocket("wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/alerts");
+
+useEffect(() => {
+  if (alert) {
+    console.log("⚠️ Anomaly detected:", alert);
+    // show toast or highlight affected equipment
+  }
+}, [alert]);
+
+
   // normalize and push incoming WS record
   useEffect(() => {
     if (!wsData) return;
