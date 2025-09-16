@@ -1,7 +1,23 @@
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Typography,
+  Grid,
+  Box,
+  CircularProgress,
+} from "@mui/material";
 import { TrendingUp, Factory, Leaf, Activity } from "lucide-react";
-import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function KpiDashboard() {
   const [kpis, setKpis] = useState(null);
@@ -22,8 +38,27 @@ export default function KpiDashboard() {
     fetchKpis();
   }, []);
 
-  if (loading) return <div className="p-8 text-gray-500">Loading KPIs...</div>;
-  if (!kpis) return <div className="p-8 text-red-500">No data available</div>;
+  if (loading)
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="200px"
+      >
+        <CircularProgress />
+        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+          Loading KPIs...
+        </Typography>
+      </Box>
+    );
+
+  if (!kpis)
+    return (
+      <Box p={4}>
+        <Typography color="error">No data available</Typography>
+      </Box>
+    );
 
   const trendData = [
     { name: "SEE", value: kpis.energy.see },
@@ -33,77 +68,128 @@ export default function KpiDashboard() {
     { name: "Residue", value: kpis.quality.residue },
   ];
 
+  const cardStyles = (color) => ({
+    borderTop: `4px solid ${color}`,
+    borderRadius: 2,
+    boxShadow: 3,
+    height: "100%",
+  });
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 p-6">
+    <Grid container spacing={3} p={3}>
       {/* Energy Card */}
-      <Card className="shadow-lg rounded-2xl border-t-4 border-blue-500">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Factory className="text-blue-500" />
-            Energy
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-700">SEE: {kpis.energy.see.toFixed(2)} kWh/t</p>
-          <p className="text-gray-700">STE: {kpis.energy.ste.toFixed(2)} kcal/kg</p>
-        </CardContent>
-      </Card>
+      <Grid item xs={12} md={6} lg={3}>
+        <Card sx={cardStyles("#3b82f6")}>
+          <CardHeader
+            avatar={<Factory color="#3b82f6" />}
+            title={
+              <Typography variant="h6" fontWeight="bold">
+                Energy
+              </Typography>
+            }
+          />
+          <CardContent>
+            <Typography color="text.secondary">
+              SEE: {kpis.energy.see.toFixed(2)} kWh/t
+            </Typography>
+            <Typography color="text.secondary">
+              STE: {kpis.energy.ste.toFixed(2)} kcal/kg
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
 
       {/* Quality Card */}
-      <Card className="shadow-lg rounded-2xl border-t-4 border-purple-500">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="text-purple-500" />
-            Quality
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-700">Blaine: {kpis.quality.blaine.toFixed(1)}</p>
-          <p className="text-gray-700">Residue: {kpis.quality.residue.toFixed(2)}%</p>
-          <p className="text-gray-700">Out-of-spec: {kpis.quality.out_of_spec_pct.toFixed(1)}%</p>
-        </CardContent>
-      </Card>
+      <Grid item xs={12} md={6} lg={3}>
+        <Card sx={cardStyles("#8b5cf6")}>
+          <CardHeader
+            avatar={<TrendingUp color="#8b5cf6" />}
+            title={
+              <Typography variant="h6" fontWeight="bold">
+                Quality
+              </Typography>
+            }
+          />
+          <CardContent>
+            <Typography color="text.secondary">
+              Blaine: {kpis.quality.blaine.toFixed(1)}
+            </Typography>
+            <Typography color="text.secondary">
+              Residue: {kpis.quality.residue.toFixed(2)}%
+            </Typography>
+            <Typography color="text.secondary">
+              Out-of-spec: {kpis.quality.out_of_spec_pct.toFixed(1)}%
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
 
       {/* Sustainability Card */}
-      <Card className="shadow-lg rounded-2xl border-t-4 border-green-500">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Leaf className="text-green-500" />
-            Sustainability
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-700">CO₂: {kpis.sustainability.co2_per_ton.toFixed(2)} kg/t</p>
-        </CardContent>
-      </Card>
+      <Grid item xs={12} md={6} lg={3}>
+        <Card sx={cardStyles("#22c55e")}>
+          <CardHeader
+            avatar={<Leaf color="#22c55e" />}
+            title={
+              <Typography variant="h6" fontWeight="bold">
+                Sustainability
+              </Typography>
+            }
+          />
+          <CardContent>
+            <Typography color="text.secondary">
+              CO₂: {kpis.sustainability.co2_per_ton.toFixed(2)} kg/t
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
 
       {/* Stability Card */}
-      <Card className="shadow-lg rounded-2xl border-t-4 border-orange-500">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="text-orange-500" />
-            Stability
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-700">Kiln stops: {kpis.stability.kiln_stops}</p>
-          <p className="text-gray-700">Alarm minutes: {kpis.stability.alarm_minutes}</p>
-        </CardContent>
-      </Card>
+      <Grid item xs={12} md={6} lg={3}>
+        <Card sx={cardStyles("#f97316")}>
+          <CardHeader
+            avatar={<Activity color="#f97316" />}
+            title={
+              <Typography variant="h6" fontWeight="bold">
+                Stability
+              </Typography>
+            }
+          />
+          <CardContent>
+            <Typography color="text.secondary">
+              Kiln stops: {kpis.stability.kiln_stops}
+            </Typography>
+            <Typography color="text.secondary">
+              Alarm minutes: {kpis.stability.alarm_minutes}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
 
       {/* Trend Chart */}
-      <div className="col-span-1 md:col-span-2 xl:col-span-4 bg-white shadow-lg rounded-2xl p-6">
-        <h2 className="text-lg font-semibold mb-4 text-gray-800">KPI Trends</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Area type="monotone" dataKey="value" stroke="#4f46e5" fill="#6366f1" fillOpacity={0.3} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+      <Grid item xs={12}>
+        <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              KPI Trends
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#4f46e5"
+                  fill="#6366f1"
+                  fillOpacity={0.3}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </Grid>
+    </Grid>
   );
 }
