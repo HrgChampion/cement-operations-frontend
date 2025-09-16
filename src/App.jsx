@@ -2,6 +2,7 @@ import './App.css'
 import Login from './components/Login/Login'
 import CementRealtimeDashboard from './components/Dashboard/Dashboard'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import KpiDashboard from './components/Dashboard/KpiDashboard'
 
 
 function App() {
