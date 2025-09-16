@@ -18,24 +18,25 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { fetchKpis } from "../../utils/api";
 
 export default function KpiDashboard() {
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchKpis() {
+    async function loadKpis() {
       try {
-        const res = await fetch("/api/kpis");
-        const data = await res.json();
+        const data = await fetchKpis();
         setKpis(data);
       } catch (err) {
         console.error("Failed to fetch KPIs:", err);
+        setError("Failed to load KPI data");
       } finally {
         setLoading(false);
       }
     }
-    fetchKpis();
+    loadKpis();
   }, []);
 
   if (loading)
