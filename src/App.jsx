@@ -22,11 +22,17 @@ const appRouter= createBrowserRouter([
   {
     path:"/dashboard",
     element:<CementRealtimeDashboard/>
+  },
+  {
+    path: "/kpis",
+    element: <KpiDashboard />
   }
+  
 ])
   return (
     <>
       <RouterProvider router={appRouter}/>
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   )
 }

@@ -11,6 +11,8 @@ import {
 } from "recharts";
 import { fmt, fmtShort } from "../../utils/format";
 import { RefreshCw } from 'lucide-react';
+import toast from "react-hot-toast";
+import TrendsChart from "../Trends/TrendsChart";
 
 const WS_URL =  "wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/data";
 
@@ -22,12 +24,13 @@ export default function Dashboard() {
 
   const alert = useAlertsSocket("wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/alerts");
 
-useEffect(() => {
-  if (alert) {
-    console.log("⚠️ Anomaly detected:", alert);
-    // show toast or highlight affected equipment
-  }
-}, [alert]);
+  useEffect(() => {
+    if (alert) {
+      toast.error(
+        `⚠️ Anomaly on ${alert.equipment} (prob: ${(alert.prob * 100).toFixed(1)}%)`
+      );
+    }
+  }, [alert]);
 
 
   // normalize and push incoming WS record
@@ -251,6 +254,9 @@ useEffect(() => {
           </CardContent>
         </Card>
       </Box>
+
+      <TrendsChart equipment="kiln" />
+      <TrendsChart equipment="mill" />
     </Box>
   );
 }
