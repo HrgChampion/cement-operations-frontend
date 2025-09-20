@@ -29,7 +29,7 @@ export async function fetchLatestHistory(limit = 100) {
 }
 
 export async function fetchKpis() {
-  const res = await API.get("/api/kpis");
+  const res = await API.get("/kpis");
   return res.data;
 }
 
