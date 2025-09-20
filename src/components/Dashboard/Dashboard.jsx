@@ -13,6 +13,7 @@ import { fmt, fmtShort } from "../../utils/format";
 import { RefreshCw } from 'lucide-react';
 import toast from "react-hot-toast";
 import TrendsChart from "../Trends/TrendsChart";
+import useAlertsSocket from "../../hooks/useAlertSocket";
 
 const WS_URL =  "wss://cement-operations-backend-594125598497.asia-south1.run.app/ws/data";
 

@@ -1,4 +1,3 @@
-// hooks/useAlertsSocket.js
 import { useEffect, useRef, useState } from "react";
 
 export default function useAlertsSocket(url) {
