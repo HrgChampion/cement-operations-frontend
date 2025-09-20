@@ -194,41 +194,40 @@ export default function Dashboard() {
           </Card>
         </Grid>
 
-        {/* More charts: Power & Vibration */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={6}>
-            <Card sx={{ borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6">⚡ Power</Typography>
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="timestamp" hide />
-                    <YAxis />
-                    <Tooltip />
-                    <Line dataKey="power" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
+        {/* Power Card - now wider */}
+        <Grid item xs={12} md={6} lg={6}>
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent>
+              <Typography variant="h6">⚡ Power</Typography>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" hide />
+                  <YAxis />
+                  <Tooltip />
+                  <Line dataKey="power" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Grid item xs={12} md={6} lg={6}>
-            <Card sx={{ borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6">📈 Vibration</Typography>
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="timestamp" hide />
-                    <YAxis />
-                    <Tooltip />
-                    <Line dataKey="vibration" stroke="#10b981" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
+        {/* Vibration Card - now wider */}
+        <Grid item xs={12} md={6} lg={6}>
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent>
+              <Typography variant="h6">📈 Vibration</Typography>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" hide />
+                  <YAxis />
+                  <Tooltip />
+                  <Line dataKey="vibration" stroke="#10b981" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
