@@ -214,7 +214,7 @@ export default function Dashboard() {
 
         {/* Vibration Card - now wider */}
         <Grid item xs={12} md={6} lg={6}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card sx={{ borderRadius: 3,width:"200px" }}>
             <CardContent>
               <Typography variant="h6">📈 Vibration</Typography>
               <ResponsiveContainer width="100%" height={220}>
