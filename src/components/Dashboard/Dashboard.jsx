@@ -33,6 +33,12 @@ export default function Dashboard() {
     }
   }, [alert]);
 
+  // Log when WebSocket connection is open for wsData
+  useEffect(() => {
+    if (wsData) {
+      console.log("WebSocket connection for wsData is open.");
+    }
+  }, [wsData]);
 
   // normalize and push incoming WS record
   useEffect(() => {
